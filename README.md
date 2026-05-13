@@ -50,5 +50,4 @@ cd frontend && npm run dev
 **Janakpur, Nepal**
 Ramananda Chowk, Janakpur 44100
 
----
-Crafted with ❤️ by Kalakar Studio Team.
+
