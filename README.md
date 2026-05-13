@@ -44,8 +44,7 @@ cd frontend && npm run dev
 
 ### 4. Admin Access
 - **URL**: `http://localhost:3000/admin`
-- **Email**: `admin@kalakar.com`
-- **Password**: `admin123`
+
 
 ## 📍 Location
 **Janakpur, Nepal**
