@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, LogIn, Lock, Mail, ArrowRight } from 'lucide-react';
+import { LayoutDashboard, LogIn, Lock, Mail, ArrowRight, Link } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function AdminLogin() {
@@ -20,6 +20,7 @@ export default function AdminLogin() {
     // In a real app, this would be a backend request
     if (password === 'admin123') {
       setTimeout(() => {
+        localStorage.setItem('kalakar_admin_auth', 'true');
         router.push('/admin/dashboard');
       }, 1000);
     } else {

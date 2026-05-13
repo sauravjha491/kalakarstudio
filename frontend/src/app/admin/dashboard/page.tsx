@@ -25,11 +25,17 @@ import {
   ChevronRight,
   ExternalLink,
   Image as ImageIcon,
-  Video
+  Video,
+  Lock
 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminDashboard() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
   const [activeTab, setActiveTab] = useState('inquiries');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [inquiries, setInquiries] = useState<any[]>([]);
@@ -52,11 +58,44 @@ export default function AdminDashboard() {
   const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
-    fetchInquiries();
-    fetchFilms();
-    fetchMusic();
-    fetchSettings();
+    const authStatus = localStorage.getItem('kalakar_admin_auth');
+    if (authStatus === 'true') {
+      setIsAuthenticated(true);
+    }
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchInquiries();
+      fetchFilms();
+      fetchMusic();
+      fetchSettings();
+    }
+  }, [isAuthenticated]);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    setLoginError('');
+
+    if (loginPassword === 'admin123') {
+      setTimeout(() => {
+        setIsAuthenticated(true);
+        localStorage.setItem('kalakar_admin_auth', 'true');
+        setIsLoggingIn(false);
+      }, 1000);
+    } else {
+      setTimeout(() => {
+        setLoginError('Invalid administrative key');
+        setIsLoggingIn(false);
+      }, 800);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('kalakar_admin_auth');
+    setIsAuthenticated(false);
+  };
 
   const fetchInquiries = () => {
     fetch('http://localhost:5000/api/inquiries').then(res => res.json()).then(data => setInquiries(data));
@@ -128,6 +167,78 @@ export default function AdminDashboard() {
     }
   };
 
+  if (!isAuthenticated) {
+    return (
+      <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black font-sans">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-[120px] -mr-48 -mt-48" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-[120px] -ml-48 -mb-48" />
+        </div>
+
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="w-full max-w-md relative z-10 px-6"
+        >
+          <div className="text-center mb-10">
+            <h1 className="text-4xl font-serif text-white mb-4 tracking-tighter uppercase">
+              Kalakar <span className="text-accent italic">Studio</span>
+            </h1>
+            <div className="flex items-center justify-center gap-2 text-gray-500 uppercase tracking-[0.3em] text-[10px] font-bold">
+              <Lock size={12} />
+              <span>Admin Dashboard Access</span>
+            </div>
+          </div>
+
+          <form onSubmit={handleLogin} className="bg-white/5 backdrop-blur-2xl border border-white/10 p-8 md:p-10 rounded-[2.5rem] shadow-2xl space-y-8">
+            <div className="space-y-4">
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Administrative Key</label>
+              <div className="relative">
+                <input 
+                  type="password" 
+                  required
+                  autoFocus
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="Enter your secret key"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-accent transition-all text-center tracking-[0.5em]"
+                />
+              </div>
+            </div>
+
+            {loginError && (
+              <motion.p 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                className="text-red-400 text-xs font-medium text-center bg-red-400/10 py-3 rounded-xl border border-red-400/20"
+              >
+                {loginError}
+              </motion.p>
+            )}
+
+            <button 
+              type="submit" 
+              disabled={isLoggingIn}
+              className="w-full bg-white text-black hover:bg-accent hover:text-white py-5 rounded-2xl font-bold uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-3 shadow-xl disabled:bg-gray-800 disabled:text-gray-500"
+            >
+              {isLoggingIn ? (
+                <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>Unlock Dashboard <ChevronRight size={16} /></>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-8 text-center">
+            <Link href="/" className="text-gray-500 hover:text-white transition-colors text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2">
+              Back to Home
+            </Link>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
       <AnimatePresence>
@@ -169,10 +280,10 @@ export default function AdminDashboard() {
           ))}
         </nav>
         <div className="p-6">
-          <Link href="/admin" className="w-full flex items-center gap-4 px-6 py-4 text-red-400 hover:bg-red-500/10 rounded-2xl transition-colors">
+          <button onClick={handleLogout} className="w-full flex items-center gap-4 px-6 py-4 text-red-400 hover:bg-red-500/10 rounded-2xl transition-colors">
             <LogOut size={18} />
             <span className="font-bold uppercase tracking-widest text-[10px]">Logout</span>
-          </Link>
+          </button>
         </div>
       </aside>
 
