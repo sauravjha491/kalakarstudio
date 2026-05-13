@@ -1,102 +1,101 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Film, Music, Settings, LogOut, Plus } from 'lucide-react';
-import Link from 'next/link';
+import { LayoutDashboard, LogIn, Lock, Mail, ArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+export default function AdminLogin() {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    // Simple password check for demo purposes
+    // In a real app, this would be a backend request
+    if (password === 'admin123') {
+      setTimeout(() => {
+        router.push('/admin/dashboard');
+      }, 1000);
+    } else {
+      setTimeout(() => {
+        setError('Invalid administrative credentials');
+        setIsLoading(false);
+      }, 1000);
+    }
+  };
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Admin Sidebar */}
-      <aside className="w-64 bg-slate-900 text-white flex flex-col">
-        <div className="p-8 border-b border-slate-800">
-          <h2 className="text-xl font-bold tracking-tight">Admin Panel</h2>
+    <div className="min-h-screen bg-black flex items-center justify-center p-6 font-sans">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-[120px] -mr-48 -mt-48" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-[120px] -ml-48 -mb-48" />
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md relative z-10"
+      >
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-serif text-white mb-4 tracking-tighter uppercase">
+            Kalakar <span className="text-accent italic">Studio</span>
+          </h1>
+          <div className="flex items-center justify-center gap-2 text-gray-500 uppercase tracking-[0.3em] text-[10px] font-bold">
+            <Lock size={12} />
+            <span>Secure Admin Access</span>
+          </div>
         </div>
-        <nav className="flex-1 p-4 space-y-2">
-          {[
-            { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
-            { id: 'films', name: 'Manage Films', icon: Film },
-            { id: 'music', name: 'Manage Music', icon: Music },
-            { id: 'settings', name: 'Settings', icon: Settings },
-          ].map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                activeTab === item.id ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800'
-              }`}
+
+        <form onSubmit={handleLogin} className="bg-white/5 backdrop-blur-xl border border-white/10 p-10 rounded-[2.5rem] shadow-2xl space-y-8">
+          <div className="space-y-4">
+            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Administrative Password</label>
+            <div className="relative">
+              <input 
+                type="password" 
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter access key"
+                className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-accent transition-all"
+              />
+            </div>
+          </div>
+
+          {error && (
+            <motion.p 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              className="text-red-400 text-xs font-medium text-center bg-red-400/10 py-3 rounded-xl border border-red-400/20"
             >
-              <item.icon size={20} />
-              <span className="font-medium">{item.name}</span>
-            </button>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-slate-800">
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
-            <LogOut size={20} />
-            <span className="font-medium">Logout</span>
+              {error}
+            </motion.p>
+          )}
+
+          <button 
+            type="submit" 
+            disabled={isLoading}
+            className="w-full bg-white text-black hover:bg-accent hover:text-white py-5 rounded-2xl font-bold uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-3 shadow-xl disabled:bg-gray-800 disabled:text-gray-500"
+          >
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>Access Dashboard <ArrowRight size={16} /></>
+            )}
           </button>
+        </form>
+
+        <div className="mt-12 text-center">
+          <Link href="/" className="text-gray-500 hover:text-white transition-colors text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2">
+            Return to main site
+          </Link>
         </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-8">
-        <header className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 capitalize">{activeTab}</h1>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors">
-            <Plus size={20} />
-            Add New {activeTab === 'films' ? 'Film' : activeTab === 'music' ? 'Track' : 'Entry'}
-          </button>
-        </header>
-
-        {activeTab === 'dashboard' && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-              <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-2">Total Films</p>
-              <h3 className="text-4xl font-bold text-gray-900">24</h3>
-            </div>
-            <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-              <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-2">Total Tracks</p>
-              <h3 className="text-4xl font-bold text-gray-900">12</h3>
-            </div>
-            <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-              <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-2">Inquiries</p>
-              <h3 className="text-4xl font-bold text-gray-900">156</h3>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'films' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <table className="w-full text-left">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-4 text-sm font-bold text-gray-500 uppercase tracking-wider">Title</th>
-                  <th className="px-6 py-4 text-sm font-bold text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-4 text-sm font-bold text-gray-500 uppercase tracking-wider">Location</th>
-                  <th className="px-6 py-4 text-sm font-bold text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {[1, 2, 3].map((i) => (
-                  <tr key={i}>
-                    <td className="px-6 py-4 font-medium text-gray-900">Sample Wedding Film {i}</td>
-                    <td className="px-6 py-4 text-gray-600">June 2025</td>
-                    <td className="px-6 py-4 text-gray-600">Italy</td>
-                    <td className="px-6 py-4 space-x-4">
-                      <button className="text-blue-600 hover:underline">Edit</button>
-                      <button className="text-red-600 hover:underline">Delete</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </main>
+      </motion.div>
     </div>
   );
 }

@@ -1,11 +1,24 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Heart, Music, MapPin, Star, ArrowRight } from 'lucide-react';
+import { Play, Heart, Music, MapPin, Star, ArrowRight, Instagram, Phone, Mail } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Home() {
+  const [music, setMusic] = useState<any[]>([]);
+  const [settings, setSettings] = useState<any>(null);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/music')
+      .then(res => res.json())
+      .then(data => setMusic(data.slice(0, 3))); // Show top 3
+
+    fetch('http://localhost:5000/api/settings')
+      .then(res => res.json())
+      .then(data => setSettings(data));
+  }, []);
+
   return (
     <main className="bg-white min-h-screen">
       {/* Hero Section */}
@@ -43,7 +56,7 @@ export default function Home() {
 
       {/* Philosophy Section */}
       <section className="py-24 px-8 md:px-24">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-16 items-center">
+        <div className="max-w-5xl mx-auto flex flex-col md:row gap-16 items-center">
           <div className="flex-1 space-y-8 text-black">
             <div className="flex items-center gap-4 text-accent uppercase tracking-[0.3em] text-xs font-bold">
               <div className="w-12 h-[1px] bg-accent" />
@@ -53,11 +66,11 @@ export default function Home() {
               Nothing is ever lost to us as long as we remember it.
             </h2>
             <p className="text-gray-500 text-xl font-light leading-relaxed">
-              We invented wedding films. Our pioneering approach ensures each wedding film is a unique masterpiece.
+              Based in {settings?.location || 'Janakpur, Nepal'}, Kalakar Studio is dedicated to preserving your most precious memories through cinematic excellence.
             </p>
-            <button className="group flex items-center gap-3 text-black font-bold uppercase tracking-widest text-sm border-b-2 border-black pb-2 hover:text-accent hover:border-accent transition-all">
+            <Link href="/about-us" className="group inline-flex items-center gap-3 text-black font-bold uppercase tracking-widest text-sm border-b-2 border-black pb-2 hover:text-accent hover:border-accent transition-all">
               Read Our Story <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
-            </button>
+            </Link>
           </div>
           <div className="flex-1 relative">
             <div className="aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl">
@@ -85,18 +98,15 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          {[
-            { title: "Ik Onkar", artist: "Harshdeep Kaur", img: "https://images.unsplash.com/photo-1514320298574-2b12e4ce76e1?auto=format&fit=crop&q=80" },
-            { title: "Tu Mila", artist: "Riya Goley", img: "https://images.unsplash.com/photo-1459749411177-042180ce673c?auto=format&fit=crop&q=80" },
-            { title: "Sahib Sahiba", artist: "Shaoni Mojumdar", img: "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?auto=format&fit=crop&q=80" }
-          ].map((track, i) => (
+          {music.length > 0 ? music.map((track, i) => (
             <motion.div 
-              key={i}
+              key={track.id}
               whileHover={{ y: -10 }}
               className="group cursor-pointer"
+              onClick={() => window.open(track.spotifyUrl, '_blank')}
             >
               <div className="relative aspect-square mb-6 overflow-hidden rounded-2xl shadow-lg">
-                <img src={track.img} alt={track.title} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
+                <img src={track.image} alt={track.title} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <Play size={48} className="text-white" fill="white" />
                 </div>
@@ -104,7 +114,11 @@ export default function Home() {
               <h4 className="text-2xl font-serif mb-1 text-black">{track.title}</h4>
               <p className="text-gray-500 font-medium tracking-wide">{track.artist}</p>
             </motion.div>
-          ))}
+          )) : (
+            <div className="col-span-3 text-center py-20 text-gray-400 font-serif italic text-2xl">
+              New compositions coming soon...
+            </div>
+          )}
         </div>
       </section>
 
@@ -145,30 +159,48 @@ export default function Home() {
       <footer className="py-24 px-8 md:px-24 border-t border-gray-100 bg-white">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-20 mb-20">
           <div className="col-span-1 md:col-span-2 text-black">
-            <h2 className="text-4xl font-serif font-bold tracking-tighter leading-none mb-8">
-              THE <br /> KALAKAR <br /> STUDIO
+            <h2 className="text-4xl font-serif font-bold tracking-tighter leading-none mb-8 uppercase">
+              KALAKAR <br /> STUDIO
             </h2>
-            <p className="text-gray-500 text-lg font-light leading-relaxed max-w-sm">
+            <p className="text-gray-500 text-lg font-light leading-relaxed max-w-sm mb-6">
               Inspired by the art of storytelling.
             </p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 text-gray-400 text-sm">
+                <MapPin size={16} className="text-accent" />
+                <span>{settings?.address || 'Janakpur, Nepal'}</span>
+              </div>
+              <div className="flex items-center gap-3 text-gray-400 text-sm">
+                <Phone size={16} className="text-accent" />
+                <span>{settings?.phone || '+977 9800000000'}</span>
+              </div>
+              <div className="flex items-center gap-3 text-gray-400 text-sm">
+                <Mail size={16} className="text-accent" />
+                <span>{settings?.email || 'hello@kalakarstudio.com'}</span>
+              </div>
+            </div>
           </div>
           <div className="text-black">
             <h4 className="uppercase tracking-[0.2em] text-xs font-bold mb-8">Navigation</h4>
             <ul className="space-y-4 text-gray-500 font-medium">
-              <li>Films</li>
-              <li>Music</li>
-              <li>Workshops</li>
-              <li>About</li>
+              <li><Link href="/twf-films" className="hover:text-accent transition-colors">Films</Link></li>
+              <li><Link href="/" className="hover:text-accent transition-colors">Music</Link></li>
+              <li><Link href="/workshop" className="hover:text-accent transition-colors">Workshops</Link></li>
+              <li><Link href="/about-us" className="hover:text-accent transition-colors">About</Link></li>
             </ul>
           </div>
           <div className="text-black">
             <h4 className="uppercase tracking-[0.2em] text-xs font-bold mb-8">Social</h4>
             <ul className="space-y-4 text-gray-500 font-medium">
-              <li>Instagram</li>
-              <li>YouTube</li>
-              <li>Spotify</li>
+              <li><a href={`https://instagram.com/${settings?.instagram || 'kalakarstudio'}`} target="_blank" className="hover:text-accent transition-colors flex items-center gap-2"><Instagram size={14} /> Instagram</a></li>
+              <li className="hover:text-accent transition-colors cursor-pointer">YouTube</li>
+              <li className="hover:text-accent transition-colors cursor-pointer">Spotify</li>
             </ul>
           </div>
+        </div>
+        <div className="pt-12 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6">
+          <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">© {new Date().getFullYear()} KALAKAR STUDIO. ALL RIGHTS RESERVED.</p>
+          <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">CRAFTED IN NEPAL</p>
         </div>
       </footer>
     </main>

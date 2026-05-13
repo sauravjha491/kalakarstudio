@@ -10,7 +10,7 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// In-memory data (In a real app, use a database like MongoDB or PostgreSQL)
+// In-memory data
 let inquiries: any[] = [
   {
     id: 1,
@@ -18,7 +18,7 @@ let inquiries: any[] = [
     groomName: 'Ram',
     phone: '+977 9800000000',
     message: 'Looking for a cinematic wedding film in Janakpur.',
-    date: new RegExp('2026-05-13'),
+    date: new Date().toISOString(),
     status: 'new'
   }
 ];
@@ -31,14 +31,41 @@ let studioSettings = {
   instagram: 'kalakarstudio.np'
 };
 
-const films = [
+let films = [
   {
     id: 1,
-    title: 'Aayush & Suman',
-    description: 'A cinematic journey of love and togetherness.',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    thumbnail: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80',
-    category: 'Wedding Film'
+    title: 'ARYA & FEDERICO',
+    date: 'JUN 2025',
+    location: 'EUROPE',
+    image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80',
+    category: 'Wedding Film',
+    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+  },
+  {
+    id: 2,
+    title: 'NIKKI & VISHAL',
+    date: 'MAR 2025',
+    location: 'INDIA',
+    image: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80',
+    category: 'Wedding Film',
+    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+  }
+];
+
+let music = [
+  {
+    id: 1,
+    title: 'Ik Onkar',
+    artist: 'Harshdeep Kaur',
+    image: 'https://images.unsplash.com/photo-1514320298574-2b12e4ce76e1?auto=format&fit=crop&q=80',
+    spotifyUrl: 'https://open.spotify.com'
+  },
+  {
+    id: 2,
+    title: 'Tu Mila',
+    artist: 'Riya Goley',
+    image: 'https://images.unsplash.com/photo-1459749411177-042180ce673c?auto=format&fit=crop&q=80',
+    spotifyUrl: 'https://open.spotify.com'
   }
 ];
 
@@ -52,6 +79,63 @@ app.get('/api/films', (req, res) => {
   res.json(films);
 });
 
+app.post('/api/films', (req, res) => {
+  const newFilm = {
+    id: films.length > 0 ? Math.max(...films.map(f => f.id)) + 1 : 1,
+    ...req.body
+  };
+  films.push(newFilm);
+  res.status(201).json(newFilm);
+});
+
+app.put('/api/films/:id', (req, res) => {
+  const { id } = req.params;
+  const index = films.findIndex(f => f.id === parseInt(id));
+  if (index !== -1) {
+    films[index] = { ...films[index], ...req.body };
+    res.json(films[index]);
+  } else {
+    res.status(404).json({ message: 'Film not found' });
+  }
+});
+
+app.delete('/api/films/:id', (req, res) => {
+  const { id } = req.params;
+  films = films.filter(f => f.id !== parseInt(id));
+  res.json({ message: 'Film deleted' });
+});
+
+// Music API
+app.get('/api/music', (req, res) => {
+  res.json(music);
+});
+
+app.post('/api/music', (req, res) => {
+  const newTrack = {
+    id: music.length > 0 ? Math.max(...music.map(m => m.id)) + 1 : 1,
+    ...req.body
+  };
+  music.push(newTrack);
+  res.status(201).json(newTrack);
+});
+
+app.put('/api/music/:id', (req, res) => {
+  const { id } = req.params;
+  const index = music.findIndex(m => m.id === parseInt(id));
+  if (index !== -1) {
+    music[index] = { ...music[index], ...req.body };
+    res.json(music[index]);
+  } else {
+    res.status(404).json({ message: 'Track not found' });
+  }
+});
+
+app.delete('/api/music/:id', (req, res) => {
+  const { id } = req.params;
+  music = music.filter(m => m.id !== parseInt(id));
+  res.json({ message: 'Track deleted' });
+});
+
 // Inquiries API
 app.get('/api/inquiries', (req, res) => {
   res.json(inquiries);
@@ -59,7 +143,7 @@ app.get('/api/inquiries', (req, res) => {
 
 app.post('/api/inquiries', (req, res) => {
   const newInquiry = {
-    id: inquiries.length + 1,
+    id: inquiries.length > 0 ? Math.max(...inquiries.map(i => i.id)) + 1 : 1,
     ...req.body,
     date: new Date().toISOString(),
     status: 'new'

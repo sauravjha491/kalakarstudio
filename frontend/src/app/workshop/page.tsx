@@ -1,10 +1,19 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BookOpen, Camera, Film, Users } from 'lucide-react';
 
 export default function WorkshopPage() {
+  const [settings, setSettings] = useState<any>(null);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/settings')
+      .then(res => res.json())
+      .then(data => setSettings(data))
+      .catch(err => console.error('Error fetching settings:', err));
+  }, []);
+
   return (
     <div className="p-8">
       <div className="text-center py-16 bg-black text-white rounded-3xl overflow-hidden relative">
@@ -15,17 +24,17 @@ export default function WorkshopPage() {
           <span className="text-accent uppercase tracking-[0.4em] text-xs font-bold mb-4 block">Education</span>
           <h1 className="text-5xl md:text-8xl font-serif mb-8 tracking-tighter uppercase">Workshop</h1>
           <p className="text-gray-300 text-lg max-w-2xl mx-auto px-4 leading-relaxed">
-            Empowering the next generation of storytellers. We’ve conducted workshops in over 15 cities, educating thousands.
+            Empowering the next generation of storytellers. We conduct workshops to share our cinematic secrets and help artists grow.
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-16">
         {[
-          { icon: Camera, title: "Cinematography", desc: "Master the art of visual storytelling with small-format cameras." },
-          { icon: Film, title: "Editing", desc: "Learn the secrets of rhythmic editing and color grading." },
-          { icon: BookOpen, title: "Direction", desc: "How to direct real people and capture authentic emotions." },
-          { icon: Users, title: "Business", desc: "Building a premium brand in the wedding industry." }
+          { icon: Camera, title: "Cinematography", desc: "Master the art of visual storytelling with modern cinema cameras." },
+          { icon: Film, title: "Editing", desc: "Learn the secrets of rhythmic editing and cinematic color grading." },
+          { icon: BookOpen, title: "Direction", desc: "How to direct real people and capture authentic emotions on camera." },
+          { icon: Users, title: "Business", desc: "Building a premium brand in the luxury wedding industry." }
         ].map((item, i) => (
           <div key={i} className="p-8 bg-white border border-gray-100 rounded-2xl hover:shadow-xl transition-shadow group">
             <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-white transition-colors mb-6">
@@ -40,9 +49,9 @@ export default function WorkshopPage() {
       <div className="mt-24 bg-gray-50 rounded-3xl p-12 md:p-24 text-center">
         <h2 className="text-4xl md:text-6xl font-serif mb-8 italic">Ready to learn?</h2>
         <p className="text-gray-500 text-lg mb-12 max-w-xl mx-auto">
-          Join our upcoming 3-day masterclass in Mumbai. Limited seats available for dedicated artists only.
+          Join our upcoming 3-day masterclass in {settings?.location || 'Janakpur'}. Limited seats available for dedicated artists only.
         </p>
-        <button className="px-12 py-4 bg-black text-white rounded-full font-bold tracking-widest uppercase hover:bg-gray-800 transition-colors">
+        <button className="px-12 py-4 bg-black text-white rounded-full font-bold tracking-widest uppercase hover:bg-gray-800 transition-colors shadow-2xl">
           Register Interest
         </button>
       </div>

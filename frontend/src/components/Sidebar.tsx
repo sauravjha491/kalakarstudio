@@ -12,7 +12,8 @@ import {
   GraduationCap, 
   Monitor, 
   Phone,
-  ArrowRight
+  ArrowRight,
+  Lock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -24,6 +25,7 @@ const navItems = [
   { name: 'Workshop', href: '/workshop', icon: GraduationCap },
   { name: 'Blog & Press', href: '/blogs', icon: Monitor },
   { name: 'Contact', href: '/contact', icon: Phone },
+  { name: 'Admin', href: '/admin', icon: Lock },
 ];
 
 export default function Sidebar() {
