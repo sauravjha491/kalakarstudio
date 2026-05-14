@@ -56,6 +56,7 @@ export default function AdminDashboard() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     const authStatus = localStorage.getItem('kalakar_admin_auth');
@@ -72,6 +73,33 @@ export default function AdminDashboard() {
       fetchSettings();
     }
   }, [isAuthenticated]);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const res = await fetch('http://localhost:5000/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setFormData((prev: any) => ({ ...prev, image: data.imageUrl }));
+      } else {
+        alert(data.message || 'Upload failed');
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      alert('Error uploading image');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -483,7 +511,35 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><ImageIcon size={12} /> Thumbnail Image URL</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                          <ImageIcon size={12} /> Thumbnail Image (Direct Upload)
+                        </label>
+                        <div className="relative group/upload">
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                          />
+                          <div className={`w-full px-6 py-8 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-3 transition-all ${isUploading ? 'bg-gray-100 border-gray-300' : 'bg-gray-50 border-gray-200 group-hover/upload:border-accent group-hover/upload:bg-accent/5'}`}>
+                            {isUploading ? (
+                              <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                            ) : formData.image ? (
+                              <div className="flex flex-col items-center gap-2">
+                                <img src={formData.image} className="h-16 w-28 object-cover rounded-lg shadow-md" alt="Preview" />
+                                <span className="text-[9px] font-bold text-accent uppercase">Change Image</span>
+                              </div>
+                            ) : (
+                              <>
+                                <Plus size={20} className="text-gray-400 group-hover/upload:text-accent" />
+                                <span className="text-[10px] font-bold text-gray-400 group-hover/upload:text-accent uppercase tracking-widest">Click or drag to upload</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><ImageIcon size={12} /> Or Paste Thumbnail Image URL</label>
                         <input type="url" required value={formData.image} onChange={(e) => setFormData({...formData, image: e.target.value})}
                           className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-black font-medium" />
                       </div>
@@ -501,7 +557,35 @@ export default function AdminDashboard() {
                           className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-black font-medium" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><ImageIcon size={12} /> Cover Image URL</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                          <ImageIcon size={12} /> Cover Image (Direct Upload)
+                        </label>
+                        <div className="relative group/upload">
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                          />
+                          <div className={`w-full px-6 py-8 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-3 transition-all ${isUploading ? 'bg-gray-100 border-gray-300' : 'bg-gray-50 border-gray-200 group-hover/upload:border-accent group-hover/upload:bg-accent/5'}`}>
+                            {isUploading ? (
+                              <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                            ) : formData.image ? (
+                              <div className="flex flex-col items-center gap-2">
+                                <img src={formData.image} className="h-16 w-16 object-cover rounded-lg shadow-md" alt="Preview" />
+                                <span className="text-[9px] font-bold text-accent uppercase">Change Image</span>
+                              </div>
+                            ) : (
+                              <>
+                                <Plus size={20} className="text-gray-400 group-hover/upload:text-accent" />
+                                <span className="text-[10px] font-bold text-gray-400 group-hover/upload:text-accent uppercase tracking-widest">Click or drag to upload</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><ImageIcon size={12} /> Or Paste Cover Image URL</label>
                         <input type="url" required value={formData.image} onChange={(e) => setFormData({...formData, image: e.target.value})}
                           className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-black font-medium" />
                       </div>
