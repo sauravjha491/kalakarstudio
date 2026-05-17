@@ -46,8 +46,4 @@ cd frontend && npm run dev
 - **URL**: `http://localhost:3000/admin`
 
 
-## 📍 Location
-**Janakpur, Nepal**
-Ramananda Chowk, Janakpur 44100
-
 
