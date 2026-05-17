@@ -114,7 +114,32 @@ let music = [
     spotifyUrl: 'https://open.spotify.com'
   }
 ];
-
+let crew = [
+  {
+    id: 1,
+    name: 'Vishal Punjabi',
+    role: 'Founder',
+    img: 'https://images.unsplash.com/photo-1472099645785-5658abf4e?auto=format&fit=crop&q=80'
+  },
+  {
+    id: 2,
+    name: 'Hojo',
+    role: 'Senior Cinematographer',
+    img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80'
+  },
+  {
+    id: 3,
+    name: 'Kate',
+    role: 'Creative Director',
+    img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80'
+  },
+  {
+    id: 4,
+    name: 'Aashima',
+    role: 'Editor',
+    img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80'
+  }
+];
 // Health Check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Backend is running' });
@@ -216,4 +241,48 @@ app.put('/api/settings', (req, res) => {
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
+});
+// Crew API
+app.get('/api/crew', (req, res) => {
+  res.json(crew);
+});
+
+app.post('/api/crew', (req, res) => {
+  const newMember = {
+    id: crew.length > 0 ? Math.max(...crew.map(c => c.id)) + 1 : 1,
+    ...req.body
+  };
+
+  crew.push(newMember);
+
+  res.status(201).json(newMember);
+});
+
+app.put('/api/crew/:id', (req, res) => {
+  const { id } = req.params;
+
+  const index = crew.findIndex(c => c.id === parseInt(id));
+
+  if (index !== -1) {
+    crew[index] = {
+      ...crew[index],
+      ...req.body
+    };
+
+    res.json(crew[index]);
+  } else {
+    res.status(404).json({
+      message: 'Crew member not found'
+    });
+  }
+});
+
+app.delete('/api/crew/:id', (req, res) => {
+  const { id } = req.params;
+
+  crew = crew.filter(c => c.id !== parseInt(id));
+
+  res.json({
+    message: 'Crew member deleted'
+  });
 });

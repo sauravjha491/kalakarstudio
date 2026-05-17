@@ -24,7 +24,7 @@ export default function FilmsPage() {
   return (
     <div className="p-12 bg-white min-h-screen text-black">
       <div className="text-center py-20">
-        <h1 className="text-5xl md:text-6xl font-serif tracking-[0.3em]">TWF FILMS</h1>
+        <h1 className="text-5xl md:text-6xl font-serif tracking-[0.3em]">KWF FILMS</h1>
         <div className="w-20 h-[1px] bg-gray-200 mx-auto mt-10" />
       </div>
 

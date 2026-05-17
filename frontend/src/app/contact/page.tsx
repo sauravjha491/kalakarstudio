@@ -51,7 +51,7 @@ export default function ContactPage() {
       <div className="text-center py-16">
         <h1 className="text-5xl md:text-7xl font-serif mb-6 tracking-tight uppercase text-black">GET IN TOUCH</h1>
         <p className="text-gray-500 text-lg max-w-xl mx-auto">
-          We’d love to hear your story. Based in the heart of {settings.address.split(',')[0]}.
+          We’d love to hear your story. Based in the heart of Janakpur.
         </p>
       </div>
 

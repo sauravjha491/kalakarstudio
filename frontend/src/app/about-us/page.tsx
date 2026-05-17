@@ -59,9 +59,9 @@ export default function AboutPage() {
         <h2 className="text-center text-4xl font-serif mb-16 uppercase tracking-widest">Our Journey</h2>
         <div className="relative border-l-2 border-gray-100 ml-4 md:ml-0 md:left-1/2 space-y-24">
           {[
-            { year: "2018", title: "The Inspiration", desc: "Our founders realized that wedding memories deserve more than just a recording; they deserve a masterpiece." },
-            { year: "2020", title: "Kalakar Studio is Born", desc: "Official launch in Janakpur, bringing a fresh cinematic perspective to local celebrations." },
-            { year: "2023", title: "Going Global", desc: "Expanding our horizons and filming beautiful stories across Nepal and beyond." }
+            { year: "2022", title: "The Inspiration", desc: "Our founders realized that wedding memories deserve more than just a recording; they deserve a masterpiece." },
+            { year: "2023", title: "Kalakar Weddinng Flimer is Born", desc: "Official launch in Janakpur, bringing a fresh cinematic perspective to local celebrations." },
+            { year: "2025", title: "Going Global", desc: "Expanding our horizons and filming beautiful stories across Nepal and beyond." }
           ].map((item, i) => (
             <div key={i} className="relative pl-12 md:pl-0">
               <div className="absolute left-[-9px] md:left-[-9px] top-0 w-4 h-4 rounded-full bg-black border-4 border-white ring-1 ring-gray-100" />

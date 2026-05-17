@@ -34,14 +34,14 @@ export default function Sidebar() {
   return (
     <div className="fixed left-0 top-0 h-screen w-64 bg-black text-white flex flex-col z-50">
       {/* Logo */}
-      <div className="p-10 mb-4">
+      <div className="p-5 mb-3">
         <Link href="/">
           <div className="relative">
-            <h1 className="text-3xl font-serif font-bold tracking-tighter leading-[0.8] text-white">
-              THE <br /> 
-              <span className="text-4xl">KALAKAR</span> <br /> 
-              STUDIO
-            </h1>
+          <img
+  src="/logo2.PNG"
+  alt="Kalakar Wedding Filmer"
+  className="w-auto h-auto object-contain"
+/>
             <div className="absolute -bottom-4 left-0 w-12 h-[1px] bg-white/20" />
           </div>
         </Link>

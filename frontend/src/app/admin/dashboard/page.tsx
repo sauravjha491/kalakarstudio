@@ -26,7 +26,8 @@ import {
   ExternalLink,
   Image as ImageIcon,
   Video,
-  Lock
+  Lock,
+   Users
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -41,9 +42,10 @@ export default function AdminDashboard() {
   const [inquiries, setInquiries] = useState<any[]>([]);
   const [films, setFilms] = useState<any[]>([]);
   const [music, setMusic] = useState<any[]>([]);
+  const [crew, setCrew] = useState<any[]>([]);
   const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<'film' | 'music' | null>(null);
+  const [modalType, setModalType] = useState<'film' | 'music' | 'crew' | null>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [formData, setFormData] = useState<any>({});
   
@@ -70,6 +72,7 @@ export default function AdminDashboard() {
       fetchInquiries();
       fetchFilms();
       fetchMusic();
+      fetchCrew();
       fetchSettings();
     }
   }, [isAuthenticated]);
@@ -134,6 +137,11 @@ export default function AdminDashboard() {
   const fetchMusic = () => {
     fetch('http://localhost:5000/api/music').then(res => res.json()).then(data => setMusic(data));
   };
+   const fetchCrew = async () => {
+    const res = await fetch('http://localhost:5000/api/crew');
+    const data = await res.json();
+    setCrew(data);
+  };
   const fetchSettings = () => {
     fetch('http://localhost:5000/api/settings').then(res => res.json()).then(data => setSettings(data));
   };
@@ -153,31 +161,64 @@ export default function AdminDashboard() {
     setIsSaving(false);
   };
 
-  const handleDelete = async (type: 'inquiries' | 'films' | 'music', id: number) => {
+  const handleDelete = async (type: 'inquiries' | 'films' | 'music' | 'crew', id: number) => {
     if (confirm(`Delete this ${type.slice(0, -1)}?`)) {
       const res = await fetch(`http://localhost:5000/api/${type}/${id}`, { method: 'DELETE' });
       if (res.ok) {
         if (type === 'inquiries') fetchInquiries();
         if (type === 'films') fetchFilms();
         if (type === 'music') fetchMusic();
+        if (type === 'crew') fetchCrew();
       }
     }
   };
+  
+  const openModal = (type: 'film' | 'music' | 'crew', item: any = null) => {
+  setModalType(type);
+  setEditingItem(item);
 
-  const openModal = (type: 'film' | 'music', item: any = null) => {
-    setModalType(type);
-    setEditingItem(item);
-    setFormData(item || (type === 'film' ? {
-      title: '', date: '', location: '', image: '', videoUrl: '', category: 'Wedding Film'
-    } : {
-      title: '', artist: '', image: '', spotifyUrl: ''
-    }));
-    setIsModalOpen(true);
-  };
+  if (item) {
+    setFormData(item);
+  } else {
+    if (type === 'film') {
+      setFormData({
+        title: '',
+        date: '',
+        location: '',
+        image: '',
+        videoUrl: '',
+        category: 'Wedding Film',
+      });
+    } else if (type === 'music') {
+      setFormData({
+        title: '',
+        artist: '',
+        image: '',
+        spotifyUrl: '',
+      });
+    }
+     if (type === 'crew') {
+        setFormData({
+          name: '',
+          role: '',
+          img: ''
+        });
+      } 
+    else {
+      setFormData({
+        name: '',
+        role: '',
+        img: '',
+      });
+    }
+  }
+
+  setIsModalOpen(true);
+};
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const type = modalType === 'film' ? 'films' : 'music';
+    const type = modalType === 'film' ? 'films' : modalType === 'music' ? 'music' : 'crew';
     const method = editingItem ? 'PUT' : 'POST';
     const url = editingItem ? `http://localhost:5000/api/${type}/${editingItem.id}` : `http://localhost:5000/api/${type}`;
     
@@ -189,7 +230,7 @@ export default function AdminDashboard() {
 
     if (res.ok) {
       setIsModalOpen(false);
-      modalType === 'film' ? fetchFilms() : fetchMusic();
+      type === 'films' ? fetchFilms() : type === 'music' ? fetchMusic() : fetchCrew();
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     }
@@ -284,7 +325,7 @@ export default function AdminDashboard() {
         <div className="p-10 flex justify-between items-center">
           <Link href="/">
             <h2 className="text-2xl font-serif font-bold tracking-tight uppercase leading-none">
-              Kalakar <br /> Studio <span className="text-accent block text-xs tracking-[0.4em] mt-2 font-sans">Admin</span>
+              Kalakar <br /> Wedding Filmer <span className="text-accent block text-xs tracking-[0.4em] mt-2 font-sans">Admin</span>
             </h2>
           </Link>
           <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-white"><X size={24} /></button>
@@ -295,6 +336,7 @@ export default function AdminDashboard() {
             { id: 'inquiries', name: 'Inquiries', icon: Mail, count: inquiries.length },
             { id: 'films', name: 'Manage Films', icon: Film },
             { id: 'music', name: 'Manage Music', icon: Music },
+             { id: 'crew', name: 'Manage Crew', icon: Users },
             { id: 'settings', name: 'Studio Settings', icon: Settings },
           ].map((item) => (
             <button key={item.id} onClick={() => { setActiveTab(item.id); if (window.innerWidth < 1024) setIsSidebarOpen(false); }}
@@ -337,6 +379,11 @@ export default function AdminDashboard() {
             {activeTab === 'music' && (
               <button onClick={() => openModal('music')} className="px-8 py-4 bg-black text-white rounded-full flex items-center gap-3 hover:bg-gray-800 transition-all shadow-xl font-bold uppercase tracking-widest text-[10px] w-full md:w-auto justify-center">
                 <Plus size={16} /> Add New Track
+              </button>
+            )}
+            {activeTab === 'crew' && (
+              <button onClick={() => openModal('crew')} className="px-8 py-4 bg-black text-white rounded-full flex items-center gap-3 hover:bg-gray-800 transition-all shadow-xl font-bold uppercase tracking-widest text-[10px] w-full md:w-auto justify-center">
+                <Plus size={16} /> Add New Crew Member
               </button>
             )}
           </header>
@@ -429,6 +476,56 @@ export default function AdminDashboard() {
             </div>
           )}
 
+          {activeTab === 'crew' && (
+            
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                      
+                      {crew.map((member) => (
+                        <div
+                          key={member.id}
+                          className="bg-white rounded-3xl overflow-hidden shadow-sm"
+                        >
+                          <div className="relative aspect-[3/4]">
+                            <img
+                              src={member.img}
+                              className="w-full h-full object-cover"
+                            />
+          
+                            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-all flex items-center justify-center gap-3">
+                              <button
+                                onClick={() =>
+                                  openModal('crew', member)
+                                }
+                                className="w-10 h-10 bg-white rounded-full flex items-center justify-center"
+                              >
+                                <Edit2 size={16} />
+                              </button>
+          
+                              <button
+                                onClick={() =>
+                                  handleDelete('crew', member.id)
+                                }
+                                className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-500"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
+          
+                          <div className="p-6">
+                            <h2 className="text-2xl font-serif">
+                              {member.name}
+                            </h2>
+          
+                            <p className="text-sm uppercase tracking-widest text-gray-400 mt-2">
+                              {member.role}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
           {activeTab === 'settings' && (
             <div className="max-w-4xl">
               <form onSubmit={handleSaveSettings} className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 p-8 md:p-12 space-y-10">
@@ -496,106 +593,260 @@ export default function AdminDashboard() {
                       className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-black font-medium" />
                   </div>
 
-                  {modalType === 'film' ? (
-                    <>
-                      <div className="grid grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date (e.g. JUN 2025)</label>
-                          <input type="text" required value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})}
-                            className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-black font-medium" />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Location</label>
-                          <input type="text" required value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})}
-                            className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-black font-medium" />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                          <ImageIcon size={12} /> Thumbnail Image (Direct Upload)
-                        </label>
-                        <div className="relative group/upload">
-                          <input 
-                            type="file" 
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                          />
-                          <div className={`w-full px-6 py-8 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-3 transition-all ${isUploading ? 'bg-gray-100 border-gray-300' : 'bg-gray-50 border-gray-200 group-hover/upload:border-accent group-hover/upload:bg-accent/5'}`}>
-                            {isUploading ? (
-                              <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                            ) : formData.image ? (
-                              <div className="flex flex-col items-center gap-2">
-                                <img src={formData.image} className="h-16 w-28 object-cover rounded-lg shadow-md" alt="Preview" />
-                                <span className="text-[9px] font-bold text-accent uppercase">Change Image</span>
-                              </div>
-                            ) : (
-                              <>
-                                <Plus size={20} className="text-gray-400 group-hover/upload:text-accent" />
-                                <span className="text-[10px] font-bold text-gray-400 group-hover/upload:text-accent uppercase tracking-widest">Click or drag to upload</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><ImageIcon size={12} /> Or Paste Thumbnail Image URL</label>
-                        <input type="url" required value={formData.image} onChange={(e) => setFormData({...formData, image: e.target.value})}
-                          className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-black font-medium" />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><Video size={12} /> Video URL (YouTube/Vimeo)</label>
-                        <input type="url" required value={formData.videoUrl} onChange={(e) => setFormData({...formData, videoUrl: e.target.value})}
-                          className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-black font-medium" />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Artist</label>
-                        <input type="text" required value={formData.artist} onChange={(e) => setFormData({...formData, artist: e.target.value})}
-                          className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-black font-medium" />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                          <ImageIcon size={12} /> Cover Image (Direct Upload)
-                        </label>
-                        <div className="relative group/upload">
-                          <input 
-                            type="file" 
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                          />
-                          <div className={`w-full px-6 py-8 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-3 transition-all ${isUploading ? 'bg-gray-100 border-gray-300' : 'bg-gray-50 border-gray-200 group-hover/upload:border-accent group-hover/upload:bg-accent/5'}`}>
-                            {isUploading ? (
-                              <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                            ) : formData.image ? (
-                              <div className="flex flex-col items-center gap-2">
-                                <img src={formData.image} className="h-16 w-16 object-cover rounded-lg shadow-md" alt="Preview" />
-                                <span className="text-[9px] font-bold text-accent uppercase">Change Image</span>
-                              </div>
-                            ) : (
-                              <>
-                                <Plus size={20} className="text-gray-400 group-hover/upload:text-accent" />
-                                <span className="text-[10px] font-bold text-gray-400 group-hover/upload:text-accent uppercase tracking-widest">Click or drag to upload</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><ImageIcon size={12} /> Or Paste Cover Image URL</label>
-                        <input type="url" required value={formData.image} onChange={(e) => setFormData({...formData, image: e.target.value})}
-                          className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-black font-medium" />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><ExternalLink size={12} /> Spotify/Music URL</label>
-                        <input type="url" required value={formData.spotifyUrl} onChange={(e) => setFormData({...formData, spotifyUrl: e.target.value})}
-                          className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-black font-medium" />
-                      </div>
-                    </>
-                  )}
+                 {modalType === 'film' ? (
+  <>
+    <div className="grid grid-cols-2 gap-6">
+      <div className="space-y-2">
+        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+          Date
+        </label>
+
+        <input
+          type="text"
+          required
+          value={formData.date}
+          onChange={(e) =>
+            setFormData({ ...formData, date: e.target.value })
+          }
+          className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+          Location
+        </label>
+
+        <input
+          type="text"
+          required
+          value={formData.location}
+          onChange={(e) =>
+            setFormData({ ...formData, location: e.target.value })
+          }
+          className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl"
+        />
+      </div>
+    </div>
+
+    {/* FILM IMAGE UPLOAD */}
+    <div className="space-y-2">
+      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+        Thumbnail Image
+      </label>
+
+      <div className="relative">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className="absolute inset-0 opacity-0 cursor-pointer z-10"
+        />
+
+        <div className="w-full h-52 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50 flex flex-col items-center justify-center overflow-hidden">
+          {isUploading ? (
+            <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" />
+          ) : formData.image ? (
+            <img
+              src={formData.image}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="text-center">
+              <ImageIcon className="mx-auto mb-3 text-gray-400" />
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                Upload Thumbnail
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+
+    <div className="space-y-2">
+      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+        Video URL
+      </label>
+
+      <input
+        type="url"
+        required
+        value={formData.videoUrl}
+        onChange={(e) =>
+          setFormData({ ...formData, videoUrl: e.target.value })
+        }
+        className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl"
+      />
+    </div>
+  </>
+) : modalType === 'music' ? (
+  <>
+    <div className="space-y-2">
+      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+        Artist
+      </label>
+
+      <input
+        type="text"
+        required
+        value={formData.artist}
+        onChange={(e) =>
+          setFormData({ ...formData, artist: e.target.value })
+        }
+        className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl"
+      />
+    </div>
+
+    {/* MUSIC IMAGE UPLOAD */}
+    <div className="space-y-2">
+      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+        Cover Image
+      </label>
+
+      <div className="relative">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className="absolute inset-0 opacity-0 cursor-pointer z-10"
+        />
+
+        <div className="w-full h-52 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50 flex flex-col items-center justify-center overflow-hidden">
+          {isUploading ? (
+            <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" />
+          ) : formData.image ? (
+            <img
+              src={formData.image}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="text-center">
+              <ImageIcon className="mx-auto mb-3 text-gray-400" />
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                Upload Cover
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+
+    <div className="space-y-2">
+      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+        Spotify URL
+      </label>
+
+      <input
+        type="url"
+        required
+        value={formData.spotifyUrl}
+        onChange={(e) =>
+          setFormData({ ...formData, spotifyUrl: e.target.value })
+        }
+        className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl"
+      />
+    </div>
+  </>
+) : (
+  <>
+    <div className="space-y-2">
+      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+        Crew Name
+      </label>
+
+      <input
+        type="text"
+        required
+        value={formData.name}
+        onChange={(e) =>
+          setFormData({ ...formData, name: e.target.value })
+        }
+        className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl"
+      />
+    </div>
+
+    <div className="space-y-2">
+      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+        Role
+      </label>
+
+      <input
+        type="text"
+        required
+        value={formData.role}
+        onChange={(e) =>
+          setFormData({ ...formData, role: e.target.value })
+        }
+        className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl"
+      />
+    </div>
+
+    {/* CREW IMAGE UPLOAD */}
+    <div className="space-y-2">
+      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+        Crew Image
+      </label>
+
+      <div className="relative">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+
+            setIsUploading(true);
+
+            const uploadData = new FormData();
+            uploadData.append('image', file);
+
+            try {
+              const res = await fetch(
+                'http://localhost:5000/api/upload',
+                {
+                  method: 'POST',
+                  body: uploadData,
+                }
+              );
+
+              const data = await res.json();
+
+              if (res.ok) {
+                setFormData((prev: any) => ({
+                  ...prev,
+                  img: data.imageUrl,
+                }));
+              }
+            } catch (err) {
+              console.error(err);
+            } finally {
+              setIsUploading(false);
+            }
+          }}
+          className="absolute inset-0 opacity-0 cursor-pointer z-10"
+        />
+
+        <div className="w-full h-52 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50 flex flex-col items-center justify-center overflow-hidden">
+          {isUploading ? (
+            <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" />
+          ) : formData.img ? (
+            <img
+              src={formData.img}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="text-center">
+              <Users className="mx-auto mb-3 text-gray-400" />
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                Upload Crew Image
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </>
+)}
                 </div>
 
                 <div className="mt-12 flex gap-4">
