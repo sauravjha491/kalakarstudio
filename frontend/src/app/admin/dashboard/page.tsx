@@ -27,7 +27,9 @@ import {
   Image as ImageIcon,
   Video,
   Lock,
-   Users
+  Users,
+  HelpCircle,
+  FileText
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -43,9 +45,11 @@ export default function AdminDashboard() {
   const [films, setFilms] = useState<any[]>([]);
   const [music, setMusic] = useState<any[]>([]);
   const [crew, setCrew] = useState<any[]>([]);
+  const [faqs, setFaqs] = useState<any[]>([]);
+  const [blogs, setBlogs] = useState<any[]>([]);
   const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<'film' | 'music' | 'crew' | null>(null);
+  const [modalType, setModalType] = useState<'film' | 'music' | 'crew' | 'faq' | 'blog' | null>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [formData, setFormData] = useState<any>({});
   
@@ -73,11 +77,13 @@ export default function AdminDashboard() {
       fetchFilms();
       fetchMusic();
       fetchCrew();
+      fetchFaqs();
+      fetchBlogs();
       fetchSettings();
     }
   }, [isAuthenticated]);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: string = 'image') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -92,7 +98,7 @@ export default function AdminDashboard() {
       });
       const data = await res.json();
       if (res.ok) {
-        setFormData((prev: any) => ({ ...prev, image: data.imageUrl }));
+        setFormData((prev: any) => ({ ...prev, [fieldName]: data.imageUrl }));
       } else {
         alert(data.message || 'Upload failed');
       }
@@ -142,6 +148,16 @@ export default function AdminDashboard() {
     const data = await res.json();
     setCrew(data);
   };
+  const fetchFaqs = async () => {
+    const res = await fetch('http://localhost:5000/api/faqs');
+    const data = await res.json();
+    setFaqs(data);
+  };
+  const fetchBlogs = async () => {
+    const res = await fetch('http://localhost:5000/api/blogs');
+    const data = await res.json();
+    setBlogs(data);
+  };
   const fetchSettings = () => {
     fetch('http://localhost:5000/api/settings').then(res => res.json()).then(data => setSettings(data));
   };
@@ -161,7 +177,7 @@ export default function AdminDashboard() {
     setIsSaving(false);
   };
 
-  const handleDelete = async (type: 'inquiries' | 'films' | 'music' | 'crew', id: number) => {
+  const handleDelete = async (type: 'inquiries' | 'films' | 'music' | 'crew' | 'faqs' | 'blogs', id: number) => {
     if (confirm(`Delete this ${type.slice(0, -1)}?`)) {
       const res = await fetch(`http://localhost:5000/api/${type}/${id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -169,11 +185,13 @@ export default function AdminDashboard() {
         if (type === 'films') fetchFilms();
         if (type === 'music') fetchMusic();
         if (type === 'crew') fetchCrew();
+        if (type === 'faqs') fetchFaqs();
+        if (type === 'blogs') fetchBlogs();
       }
     }
   };
   
-  const openModal = (type: 'film' | 'music' | 'crew', item: any = null) => {
+  const openModal = (type: 'film' | 'music' | 'crew' | 'faq' | 'blog', item: any = null) => {
   setModalType(type);
   setEditingItem(item);
 
@@ -196,8 +214,19 @@ export default function AdminDashboard() {
         image: '',
         spotifyUrl: '',
       });
-    }
-     if (type === 'crew') {
+    } else if (type === 'faq') {
+      setFormData({
+        question: '',
+        answer: '',
+      });
+    } else if (type === 'blog') {
+      setFormData({
+        title: '',
+        excerpt: '',
+        content: '',
+        image: '',
+      });
+    } else if (type === 'crew') {
         setFormData({
           name: '',
           role: '',
@@ -218,7 +247,14 @@ export default function AdminDashboard() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const type = modalType === 'film' ? 'films' : modalType === 'music' ? 'music' : 'crew';
+    const typeMap: Record<string, string> = {
+      'film': 'films',
+      'music': 'music',
+      'crew': 'crew',
+      'faq': 'faqs',
+      'blog': 'blogs'
+    };
+    const type = typeMap[modalType as string];
     const method = editingItem ? 'PUT' : 'POST';
     const url = editingItem ? `http://localhost:5000/api/${type}/${editingItem.id}` : `http://localhost:5000/api/${type}`;
     
@@ -230,7 +266,11 @@ export default function AdminDashboard() {
 
     if (res.ok) {
       setIsModalOpen(false);
-      type === 'films' ? fetchFilms() : type === 'music' ? fetchMusic() : fetchCrew();
+      if (type === 'films') fetchFilms();
+      if (type === 'music') fetchMusic();
+      if (type === 'crew') fetchCrew();
+      if (type === 'faqs') fetchFaqs();
+      if (type === 'blogs') fetchBlogs();
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     }
@@ -336,7 +376,9 @@ export default function AdminDashboard() {
             { id: 'inquiries', name: 'Inquiries', icon: Mail, count: inquiries.length },
             { id: 'films', name: 'Manage Films', icon: Film },
             { id: 'music', name: 'Manage Music', icon: Music },
-             { id: 'crew', name: 'Manage Crew', icon: Users },
+            { id: 'crew', name: 'Manage Crew', icon: Users },
+            { id: 'faqs', name: 'Manage FAQs', icon: HelpCircle },
+            { id: 'blogs', name: 'Manage Blogs', icon: FileText },
             { id: 'settings', name: 'Studio Settings', icon: Settings },
           ].map((item) => (
             <button key={item.id} onClick={() => { setActiveTab(item.id); if (window.innerWidth < 1024) setIsSidebarOpen(false); }}
@@ -384,6 +426,16 @@ export default function AdminDashboard() {
             {activeTab === 'crew' && (
               <button onClick={() => openModal('crew')} className="px-8 py-4 bg-black text-white rounded-full flex items-center gap-3 hover:bg-gray-800 transition-all shadow-xl font-bold uppercase tracking-widest text-[10px] w-full md:w-auto justify-center">
                 <Plus size={16} /> Add New Crew Member
+              </button>
+            )}
+            {activeTab === 'faqs' && (
+              <button onClick={() => openModal('faq')} className="px-8 py-4 bg-black text-white rounded-full flex items-center gap-3 hover:bg-gray-800 transition-all shadow-xl font-bold uppercase tracking-widest text-[10px] w-full md:w-auto justify-center">
+                <Plus size={16} /> Add New FAQ
+              </button>
+            )}
+            {activeTab === 'blogs' && (
+              <button onClick={() => openModal('blog')} className="px-8 py-4 bg-black text-white rounded-full flex items-center gap-3 hover:bg-gray-800 transition-all shadow-xl font-bold uppercase tracking-widest text-[10px] w-full md:w-auto justify-center">
+                <Plus size={16} /> Add New Blog Post
               </button>
             )}
           </header>
@@ -526,6 +578,46 @@ export default function AdminDashboard() {
                     </div>
                   )}
 
+          {activeTab === 'faqs' && (
+            <div className="space-y-6">
+              {faqs.map((faq) => (
+                <div key={faq.id} className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8 flex justify-between items-start group">
+                  <div className="flex-1 pr-10">
+                    <h3 className="font-serif text-xl text-black mb-4">{faq.question}</h3>
+                    <p className="text-gray-500 text-sm leading-relaxed">{faq.answer}</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={() => openModal('faq', faq)} className="p-4 bg-gray-50 rounded-2xl text-black hover:bg-black hover:text-white transition-all"><Edit2 size={16} /></button>
+                    <button onClick={() => handleDelete('faqs', faq.id)} className="p-4 bg-gray-50 rounded-2xl text-red-500 hover:bg-red-500 hover:text-white transition-all"><Trash2 size={16} /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === 'blogs' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {blogs.map((blog) => (
+                <div key={blog.id} className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden group">
+                  <div className="relative aspect-video">
+                    <img src={blog.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                      <button onClick={() => openModal('blog', blog)} className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-black hover:bg-accent hover:text-white transition-all"><Edit2 size={20} /></button>
+                      <button onClick={() => handleDelete('blogs', blog.id)} className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all"><Trash2 size={20} /></button>
+                    </div>
+                  </div>
+                  <div className="p-10">
+                    <div className="flex items-center gap-4 text-[10px] font-bold text-accent uppercase tracking-widest mb-4">
+                      <span>{new Date(blog.date).toLocaleDateString()}</span>
+                    </div>
+                    <h3 className="text-2xl font-serif text-black mb-4">{blog.title}</h3>
+                    <p className="text-gray-500 text-sm line-clamp-2 leading-relaxed">{blog.excerpt}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {activeTab === 'settings' && (
             <div className="max-w-4xl">
               <form onSubmit={handleSaveSettings} className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 p-8 md:p-12 space-y-10">
@@ -582,16 +674,23 @@ export default function AdminDashboard() {
               className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
               <form onSubmit={handleFormSubmit} className="p-8 md:p-12">
                 <div className="flex justify-between items-center mb-10">
-                  <h2 className="text-3xl font-serif text-black">{editingItem ? 'Edit' : 'Add New'} {modalType === 'film' ? 'Film' : 'Track'}</h2>
+                  <h2 className="text-3xl font-serif text-black">{editingItem ? 'Edit' : 'Add New'} {
+                    modalType === 'film' ? 'Film' : 
+                    modalType === 'music' ? 'Track' : 
+                    modalType === 'faq' ? 'FAQ' : 
+                    modalType === 'blog' ? 'Blog' : 'Crew Member'
+                  }</h2>
                   <button type="button" onClick={() => setIsModalOpen(false)} className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:text-black transition-all"><X size={20} /></button>
                 </div>
 
                 <div className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Title</label>
-                    <input type="text" required value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})}
-                      className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-black font-medium" />
-                  </div>
+                  {modalType !== 'faq' && modalType !== 'crew' && (
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Title</label>
+                      <input type="text" required value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})}
+                        className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-black font-medium" />
+                    </div>
+                  )}
 
                  {modalType === 'film' ? (
   <>
@@ -747,6 +846,50 @@ export default function AdminDashboard() {
       />
     </div>
   </>
+) : modalType === 'faq' ? (
+  <>
+    <div className="space-y-2">
+      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Question</label>
+      <input type="text" required value={formData.question} onChange={(e) => setFormData({...formData, question: e.target.value})}
+        className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl" />
+    </div>
+    <div className="space-y-2">
+      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Answer</label>
+      <textarea required rows={4} value={formData.answer} onChange={(e) => setFormData({...formData, answer: e.target.value})}
+        className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl" />
+    </div>
+  </>
+) : modalType === 'blog' ? (
+  <>
+    <div className="space-y-2">
+      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Excerpt</label>
+      <input type="text" required value={formData.excerpt} onChange={(e) => setFormData({...formData, excerpt: e.target.value})}
+        className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl" />
+    </div>
+    <div className="space-y-2">
+      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Content</label>
+      <textarea required rows={10} value={formData.content} onChange={(e) => setFormData({...formData, content: e.target.value})}
+        className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl" />
+    </div>
+    <div className="space-y-2">
+      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Cover Image</label>
+      <div className="relative">
+        <input type="file" accept="image/*" onChange={handleImageUpload} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+        <div className="w-full h-52 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50 flex flex-col items-center justify-center overflow-hidden">
+          {isUploading ? (
+            <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" />
+          ) : formData.image ? (
+            <img src={formData.image} className="w-full h-full object-cover" />
+          ) : (
+            <div className="text-center">
+              <ImageIcon className="mx-auto mb-3 text-gray-400" />
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Upload Cover</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </>
 ) : (
   <>
     <div className="space-y-2">
@@ -791,38 +934,7 @@ export default function AdminDashboard() {
         <input
           type="file"
           accept="image/*"
-          onChange={async (e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-
-            setIsUploading(true);
-
-            const uploadData = new FormData();
-            uploadData.append('image', file);
-
-            try {
-              const res = await fetch(
-                'http://localhost:5000/api/upload',
-                {
-                  method: 'POST',
-                  body: uploadData,
-                }
-              );
-
-              const data = await res.json();
-
-              if (res.ok) {
-                setFormData((prev: any) => ({
-                  ...prev,
-                  img: data.imageUrl,
-                }));
-              }
-            } catch (err) {
-              console.error(err);
-            } finally {
-              setIsUploading(false);
-            }
-          }}
+          onChange={(e) => handleImageUpload(e, 'img')}
           className="absolute inset-0 opacity-0 cursor-pointer z-10"
         />
 

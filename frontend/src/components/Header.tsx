@@ -92,22 +92,18 @@ const faqData = [
     answer:
       'Yes, we provide cinematic video editing, color grading, and social media ready video production.',
   },
-];
-
-export default function Header() {
+];export default function Header() {
   const [search, setSearch] = useState('');
   const [showFaqs, setShowFaqs] = useState(false);
   const [showEnquiry, setShowEnquiry] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [formData, setFormData] = useState({
-      brideName: '',
-      groomName: '',
-      phone: '',
-      message: ''
-    });
- 
+  const [faqs, setFaqs] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    fetch('http://localhost:5000/api/faqs')
+      .then(res => res.json())
+      .then(data => setFaqs(data))
+      .catch(err => console.error(err));
+  }, []);
 
   // Filter Movies
   const filteredMovies = useMemo(() => {
@@ -117,6 +113,16 @@ export default function Header() {
       movie.toLowerCase().includes(search.toLowerCase())
     );
   }, [search]);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [formData, setFormData] = useState({
+    brideName: '',
+    groomName: '',
+    phone: '',
+    message: ''
+  });
 
   // Search Submit
   const handleSearch = () => {
@@ -232,33 +238,63 @@ export default function Header() {
             <h2 className="text-3xl font-bold mb-6">Frequently Asked Questions</h2>
 
             <div className="space-y-4">
-              {faqData.map((faq, index) => (
-                <div
-                  key={index}
-                  className="border border-gray-200 rounded-2xl overflow-hidden"
-                >
-                  <button
-                    onClick={() =>
-                      setOpenFaq(openFaq === index ? null : index)
-                    }
-                    className="w-full flex items-center justify-between px-5 py-4 text-left font-semibold"
+              {faqs.length > 0 ? (
+                faqs.map((faq, index) => (
+                  <div
+                    key={faq.id}
+                    className="border border-gray-200 rounded-2xl overflow-hidden"
                   >
-                    {faq.question}
+                    <button
+                      onClick={() =>
+                        setOpenFaq(openFaq === index ? null : index)
+                      }
+                      className="w-full flex items-center justify-between px-5 py-4 text-left font-semibold"
+                    >
+                      {faq.question}
 
-                    {openFaq === index ? (
-                      <ChevronUp size={18} />
-                    ) : (
-                      <ChevronDown size={18} />
+                      {openFaq === index ? (
+                        <ChevronUp size={18} />
+                      ) : (
+                        <ChevronDown size={18} />
+                      )}
+                    </button>
+
+                    {openFaq === index && (
+                      <div className="px-5 pb-5 text-gray-600 text-sm leading-7">
+                        {faq.answer}
+                      </div>
                     )}
-                  </button>
+                  </div>
+                ))
+              ) : (
+                faqData.map((faq, index) => (
+                  <div
+                    key={index}
+                    className="border border-gray-200 rounded-2xl overflow-hidden"
+                  >
+                    <button
+                      onClick={() =>
+                        setOpenFaq(openFaq === index ? null : index)
+                      }
+                      className="w-full flex items-center justify-between px-5 py-4 text-left font-semibold"
+                    >
+                      {faq.question}
 
-                  {openFaq === index && (
-                    <div className="px-5 pb-5 text-gray-600 text-sm leading-7">
-                      {faq.answer}
-                    </div>
-                  )}
-                </div>
-              ))}
+                      {openFaq === index ? (
+                        <ChevronUp size={18} />
+                      ) : (
+                        <ChevronDown size={18} />
+                      )}
+                    </button>
+
+                    {openFaq === index && (
+                      <div className="px-5 pb-5 text-gray-600 text-sm leading-7">
+                        {faq.answer}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

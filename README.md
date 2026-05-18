@@ -13,17 +13,36 @@ Inspired by [The Wedding Filmer](https://www.theweddingfilmer.com/), Kalakar Stu
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS, Lucide Icons.
-- **Backend**: Node.js, Express, TypeScript.
-- **State Management**: React Hooks & Context.
+- **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS, Lucide Icons, Framer Motion.
+- **Backend**: Node.js, Express, TypeScript, Prisma ORM.
+- **Database**: PostgreSQL (Running via Docker).
+- **Storage**: Binary image storage directly in PostgreSQL for maximum portability.
 
 ## 🏁 Getting Started
 
 ### 1. Prerequisites
 - Node.js installed.
-- 500MB+ free disk space.
+- Docker & Docker Compose installed.
 
-### 2. Installation
+### 2. Environment Setup
+Create a `.env` file in the `backend` directory with the following content:
+```env
+PORT=5000
+DATABASE_URL="postgresql://postgres:admin123@localhost:5433/kalakarstudio?schema=public"
+```
+
+### 3. Database Initialization
+Spin up the PostgreSQL container and run migrations:
+```bash
+# Start Database
+docker-compose up -d
+
+# Run Migrations (Inside backend folder)
+cd backend
+npx prisma migrate dev
+```
+
+### 4. Installation
 Install dependencies in both folders:
 ```bash
 # Backend
@@ -33,7 +52,7 @@ cd backend && npm install
 cd ../frontend && npm install
 ```
 
-### 3. Running the Project
+### 5. Running the Project
 ```bash
 # Start Backend (Port 5000)
 cd backend && npm run dev
@@ -42,8 +61,16 @@ cd backend && npm run dev
 cd frontend && npm run dev
 ```
 
-### 4. Admin Access
+### 6. Admin Access
 - **URL**: `http://localhost:3000/admin`
+- **Administrative Key**: `admin123` (Default)
+
+## 📁 Project Structure
+
+- `/frontend`: Next.js web application.
+- `/backend`: Express API with Prisma & PostgreSQL.
+- `/backend/prisma`: Database schema and migrations.
+- `docker-compose.yml`: PostgreSQL container configuration.
 
 
 
