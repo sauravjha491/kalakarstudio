@@ -5,17 +5,17 @@ import multer from 'multer';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
 
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
+
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
-});
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 app.use(cors());
 app.use(express.json());
@@ -136,16 +136,22 @@ seedData();
 // Media API (Serve images from DB)
 app.get('/api/media/:id', async (req, res) => {
   const { id } = req.params;
-  const media = await prisma.media.findUnique({
-    where: { id: parseInt(id) }
-  });
+  try {
+    const media = await prisma.media.findUnique({
+      where: { id: parseInt(id) }
+    });
 
-  if (!media) {
-    return res.status(404).send('Image not found');
+    if (!media) {
+      return res.status(404).send('Image not found');
+    }
+
+    res.setHeader('Content-Type', media.mimeType);
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.send(Buffer.from(media.data));
+  } catch (err) {
+    console.error('Media fetch error:', err);
+    res.status(500).send('Error fetching media');
   }
-
-  res.setHeader('Content-Type', media.mimeType);
-  res.send(media.data);
 });
 
 // Upload API (Store in DB)
@@ -159,7 +165,7 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
       data: {
         filename: req.file.originalname,
         mimeType: req.file.mimetype,
-        data: req.file.buffer
+        data: req.file.buffer as any
       }
     });
 
@@ -174,6 +180,11 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
 // Health Check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Backend is running' });
+});
+
+// Fallback for old /uploads path (Avoid ORB errors)
+app.use('/uploads', (req, res) => {
+  res.status(404).json({ message: 'Media moved to database. Please re-upload if needed.' });
 });
 
 // Films API
